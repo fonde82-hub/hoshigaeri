@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>あなたの魂の星を調べる｜星還りの国</title>
+<meta name="description" content="生年月日から、四柱推命の十二運星にもとづく「魂の星」を調べられます。『星還りの国』シリーズ公式の計算ページです。">
+<style>
+  :root{
+    --ink:#3a3226; --sub:#7a7264; --washi:#f7f4ec; --line:#d8d2c4;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    font-family:"Yu Mincho","YuMincho","Hiragino Mincho ProN","BIZ UDMincho",serif;
+    background:var(--washi); color:var(--ink);
+    background-image:radial-gradient(circle at 20% 10%, rgba(255,255,255,.7), transparent 40%),
+                     radial-gradient(circle at 80% 90%, rgba(184,134,11,.05), transparent 50%);
+    min-height:100vh; padding:24px 16px 60px;
+  }
+  .wrap{max-width:560px;margin:0 auto;}
+  header{text-align:center;padding:28px 0 20px;}
+  .series{font-size:12px;letter-spacing:.35em;color:var(--sub);}
+  h1{font-size:26px;letter-spacing:.15em;margin-top:10px;font-weight:600;}
+  h1 .rt{display:block;font-size:11px;color:var(--sub);letter-spacing:.3em;margin-top:6px;font-weight:400;}
+  .lead{font-size:13.5px;line-height:2;color:var(--sub);text-align:center;margin:14px 0 6px;}
+  .card{
+    background:#fffdf8;border:1px solid var(--line);border-radius:10px;
+    padding:26px 22px;margin-top:18px;box-shadow:0 2px 10px rgba(58,50,38,.06);
+  }
+  .selects{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+  select{
+    font-family:inherit;font-size:16px;padding:10px 8px;border:1px solid var(--line);
+    border-radius:6px;background:#fff;color:var(--ink);
+  }
+  .btn{
+    display:block;width:100%;margin-top:18px;padding:14px;font-family:inherit;
+    font-size:16px;letter-spacing:.25em;cursor:pointer;border:none;border-radius:8px;
+    background:var(--ink);color:#fffdf8;transition:opacity .2s;
+  }
+  .btn:hover{opacity:.85;}
+  .note{font-size:11.5px;color:var(--sub);line-height:1.9;margin-top:14px;}
+  /* 結果 */
+  #result{display:none;margin-top:26px;border-radius:12px;overflow:hidden;
+    border:1.5px solid var(--accent,#888);background:#fffdf8;
+    animation:appear .8s ease;}
+  @keyframes appear{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+  .r-head{padding:22px 22px 16px;background:var(--pale,#eee);text-align:center;}
+  .tribe{display:inline-block;font-size:11.5px;letter-spacing:.2em;color:#fffdf8;
+    background:var(--accent,#888);border-radius:4px;padding:3px 14px;}
+  .r-star{font-size:46px;letter-spacing:.08em;color:var(--accent,#555);margin-top:12px;font-weight:600;}
+  .r-star small{font-size:12px;color:var(--sub);letter-spacing:.2em;margin-left:8px;font-weight:400;}
+  .r-name{font-size:20px;margin-top:8px;letter-spacing:.1em;font-weight:600;}
+  .r-kana{font-size:11px;color:var(--sub);letter-spacing:.25em;margin-top:4px;}
+  .r-body{padding:20px 24px 24px;}
+  .r-copy{font-size:15px;line-height:2;text-align:center;letter-spacing:.06em;
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:14px 0;}
+  .r-row{display:flex;gap:12px;font-size:13px;line-height:1.9;margin-top:14px;}
+  .r-label{flex:0 0 6.5em;color:var(--accent,#666);letter-spacing:.12em;font-size:12px;padding-top:2px;}
+  .r-val{flex:1;}
+  .cta{margin-top:22px;text-align:center;}
+  .cta a{
+    display:inline-block;margin:5px 4px;padding:11px 22px;font-size:13.5px;letter-spacing:.12em;
+    color:var(--accent,#555);border:1px solid var(--accent,#888);border-radius:24px;
+    text-decoration:none;transition:all .2s;background:#fff;
+  }
+  .cta a:hover{background:var(--accent,#888);color:#fffdf8;}
+  footer{margin-top:44px;text-align:center;font-size:11px;color:var(--sub);line-height:2;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="series">星還りの国シリーズ</div>
+    <h1>あなたの魂の星<span class="rt">― 生まれた日が知っている、十二人のうちの誰か ―</span></h1>
+  </header>
+
+  <p class="lead">生年月日を選んで「星を調べる」を押してください。<br>千年の運命学・四柱推命の十二運星から、あなたの魂の星をお出しします。</p>
+
+  <div class="card">
+    <div class="selects">
+      <select id="y" aria-label="年"></select>
+      <select id="m" aria-label="月"></select>
+      <select id="d" aria-label="日"></select>
+    </div>
+    <button class="btn" onclick="reveal()">星 を 調 べ る</button>
+    <p class="note">※生まれた時刻・場所は不要です（魂の星は「日」で決まります）。<br>※深夜0時前後のお生まれの方は、前日の日付でも調べて、しっくりくる方をご覧ください。</p>
+  </div>
+
+  <div id="result">
+    <div class="r-head">
+      <span class="tribe" id="rTribe"></span>
+      <div class="r-star" id="rStar"></div>
+      <div class="r-name" id="rName"></div>
+      <div class="r-kana" id="rKana"></div>
+    </div>
+    <div class="r-body">
+      <p class="r-copy" id="rCopy"></p>
+      <div class="r-row"><div class="r-label">象徴の言葉</div><div class="r-val" id="rKey"></div></div>
+      <div class="r-row"><div class="r-label">生まれ日の干支</div><div class="r-val" id="rKanshi"></div></div>
+      <div class="r-row"><div class="r-label">同じ星の有名人</div><div class="r-val" id="rFamous"></div></div>
+      <div class="r-row"><div class="r-label">向かいの星</div><div class="r-val" id="rMirror"></div></div>
+      <div class="cta">
+        <a href="#" id="linkBook">▶ この星の物語を本で読む</a>
+        <a href="#" id="linkCard">▶ 特典・十二星一覧カード</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    本ページの十二運星は日柱（生まれた日の干支）にもとづきます。<br>
+    『あなたは帝か、火の鳥か。』（星還りの国シリーズ）公式ページ<br>
+    © 本田塾　無断転載はご遠慮ください
+  </footer>
+</div>
+
+<script>
+"use strict";
+// ===== 六十干支（1900-01-01 = 甲戌 = 番号10 を基準。外部照合11名一致で検証済み） =====
+const KAN = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
+const SHI = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+
+// ===== 十二星データ =====
+const STARS = {
+  "胎":  {kana:"たい", name:"朧の夢繰り", nkana:"おぼろのゆめくり", tribe:"芽吹の民",
+          copy:"まだ形なき夢こそ、無限の宝。", key:"独創・構想・未来・マイペース",
+          famous:"黒澤明、藤井聡太、山口百恵、アガサ・クリスティ",
+          accent:"#6b8e4e", pale:"#f2f6ec", mirror:"帝旺（天照の帝）――共に燃やすのは「わが道の炎」"},
+  "養":  {kana:"よう", name:"陽だまりの座敷童", nkana:"ひだまりのざしきわらし", tribe:"芽吹の民",
+          copy:"そこにいるだけで、福を招く。", key:"愛され力・人徳・自然体・癒し",
+          famous:"藤子・F・不二雄、渋沢栄一、安室奈美恵、ココ・シャネル",
+          accent:"#6b8e4e", pale:"#f2f6ec", mirror:"衰（宵闇の軍師）――共に燃やすのは「安心の炎」"},
+  "長生":{kana:"ちょうせい", name:"暁の若菜", nkana:"あかつきのわかな", tribe:"芽吹の民",
+          copy:"素直に伸びる芽は、天まで届く。", key:"快活・機転・学び・全力投球",
+          famous:"長嶋茂雄、オードリー・ヘプバーン、湯川秀樹、新垣結衣",
+          accent:"#6b8e4e", pale:"#f2f6ec", mirror:"病（月影の琴弾き）――共に燃やすのは「勝負の炎」"},
+  "沐浴":{kana:"もくよく", name:"水鏡の歌人", nkana:"みずかがみのうたびと", tribe:"旅立の民",
+          copy:"揺れる水面にしか、映らない美がある。", key:"ときめき・挑戦・感性・自由",
+          famous:"渡辺直美、松坂桃李、田中圭、筑紫哲也",
+          accent:"#2f5d8c", pale:"#edf2f8", mirror:"死（彼岸の剣聖）――共に燃やすのは「没頭の炎」"},
+  "冠帯":{kana:"かんたい", name:"白露の若武者", nkana:"しらつゆのわかむしゃ", tribe:"旅立の民",
+          copy:"誇りを磨くことは、己を磨くこと。", key:"先駆け・美意識・誇り・仲間",
+          famous:"手塚治虫、宮崎駿、美空ひばり、スティーブ・ジョブズ",
+          accent:"#2f5d8c", pale:"#edf2f8", mirror:"墓（常世の蔵守）――共に燃やすのは「成長の炎」"},
+  "建禄":{kana:"けんろく", name:"玄鉄の刀匠", nkana:"くろがねのとうしょう", tribe:"旅立の民",
+          copy:"千の槌音が、一振りの名刀になる。", key:"実力・完璧・独立・信頼",
+          famous:"夏目漱石、孫正義、松本人志、マリリン・モンロー",
+          accent:"#2f5d8c", pale:"#edf2f8", mirror:"絶（不知火の火の鳥）――共に燃やすのは「品格の炎」"},
+  "帝旺":{kana:"ていおう", name:"天照の帝", nkana:"あまてるのみかど", tribe:"玉座の民",
+          copy:"頂の光も影も、すべて我がもの。", key:"度量・強運・面倒見・不動",
+          famous:"王貞治、タモリ、マザー・テレサ、ウォルト・ディズニー",
+          accent:"#b8860b", pale:"#faf5e6", mirror:"胎（朧の夢繰り）――共に燃やすのは「わが道の炎」"},
+  "衰":  {kana:"すい", name:"宵闇の軍師", nkana:"よいやみのぐんし", tribe:"玉座の民",
+          copy:"一歩退く者だけが、盤の全てを見る。", key:"経験・知略・存在感・粘り",
+          famous:"羽生善治、本田宗一郎、太宰治",
+          accent:"#b8860b", pale:"#faf5e6", mirror:"養（陽だまりの座敷童）――共に燃やすのは「安心の炎」"},
+  "病":  {kana:"びょう", name:"月影の琴弾き", nkana:"つきかげのことひき", tribe:"玉座の民",
+          copy:"かすかな音まで聴きとる耳は、人の心まで聴きとる。", key:"感受性・夢・慎重・自愛",
+          famous:"アインシュタイン、村上春樹、樹木希林、羽生結弦",
+          accent:"#b8860b", pale:"#faf5e6", mirror:"長生（暁の若菜）――共に燃やすのは「勝負の炎」"},
+  "死":  {kana:"し", name:"彼岸の剣聖", nkana:"ひがんのけんせい", tribe:"星還の民",
+          copy:"削ぎ落とした果てに、ただ一筋の道。", key:"集中・実践・プロ意識・潔さ",
+          famous:"野口英世、吉永小百合、松任谷由実",
+          accent:"#5b4a78", pale:"#f1eef6", mirror:"沐浴（水鏡の歌人）――共に燃やすのは「没頭の炎」"},
+  "墓":  {kana:"ぼ", name:"常世の蔵守", nkana:"とこよのくらもり", tribe:"星還の民",
+          copy:"蓄えた千の知恵は、いつか誰かの灯になる。", key:"蓄積・客観・仲間・献身",
+          famous:"大谷翔平、エジソン、ピカソ、ナイチンゲール",
+          accent:"#5b4a78", pale:"#f1eef6", mirror:"冠帯（白露の若武者）――共に燃やすのは「成長の炎」"},
+  "絶":  {kana:"ぜつ", name:"不知火の火の鳥", nkana:"しらぬいのひのとり", tribe:"星還の民",
+          copy:"燃え尽きる夜ほど、鮮やかに生まれ変わる。", key:"直感・ひらめき・自由・再生",
+          famous:"イチロー、ジョン・レノン、美輪明宏",
+          accent:"#5b4a78", pale:"#f1eef6", mirror:"建禄（玄鉄の刀匠）――共に燃やすのは「品格の炎」"},
+};
+
+// 六十干支 → 星（対照資料 00_十二運星×日柱干支 と同一データ）
+const GZ2STAR = {};
+const STAR_GZ = {
+  "胎":["丙子","戊子","丁亥","己亥","壬午","癸巳"], "養":["甲戌","乙未","庚辰","辛丑"],
+  "長生":["丙寅","戊寅","丁酉","己酉","壬申","癸卯"], "沐浴":["甲子","乙巳","庚午","辛亥"],
+  "冠帯":["丙辰","戊辰","丁未","己未","壬戌","癸丑"], "建禄":["甲寅","乙卯","庚申","辛酉"],
+  "帝旺":["丙午","戊午","丁巳","己巳","壬子","癸亥"], "衰":["甲辰","乙丑","庚戌","辛未"],
+  "病":["丙申","戊申","丁卯","己卯","壬寅","癸酉"], "死":["甲午","乙亥","庚子","辛巳"],
+  "墓":["丙戌","戊戌","丁丑","己丑","壬辰","癸未"], "絶":["甲申","乙酉","庚寅","辛卯"],
+};
+for (const [s, list] of Object.entries(STAR_GZ)) list.forEach(g => GZ2STAR[g] = s);
+
+function dayPillar(y, m, d){
+  const days = (Date.UTC(y, m-1, d) - Date.UTC(1900, 0, 1)) / 86400000;
+  const idx = ((days + 10) % 60 + 60) % 60;   // 1900-01-01 = 甲戌(10)
+  return KAN[idx % 10] + SHI[idx % 12];
+}
+
+function reveal(){
+  const y = +document.getElementById("y").value;
+  const m = +document.getElementById("m").value;
+  const d = +document.getElementById("d").value;
+  // 存在しない日付（2月30日等）をチェック
+  const chk = new Date(Date.UTC(y, m-1, d));
+  if (chk.getUTCFullYear() !== y || chk.getUTCMonth() !== m-1 || chk.getUTCDate() !== d){
+    alert("その日付は暦にありません。月日をご確認ください。"); return;
+  }
+  const gz = dayPillar(y, m, d);
+  const starName = GZ2STAR[gz];
+  const s = STARS[starName];
+  const box = document.getElementById("result");
+  box.style.setProperty("--accent", s.accent);
+  box.style.setProperty("--pale", s.pale);
+  box.style.borderColor = s.accent;
+  document.getElementById("rTribe").textContent = s.tribe;
+  document.getElementById("rStar").innerHTML = starName + "<small>" + s.kana + "</small>";
+  document.getElementById("rName").textContent = s.name;
+  document.getElementById("rKana").textContent = s.nkana;
+  document.getElementById("rCopy").textContent = "「" + s.copy + "」";
+  document.getElementById("rKey").textContent = s.key;
+  document.getElementById("rKanshi").textContent = gz + "（この星の生まれ日：" + STAR_GZ[starName].join("・") + "）";
+  document.getElementById("rFamous").textContent = s.famous + "　ほか";
+  document.getElementById("rMirror").textContent = s.mirror;
+  box.style.display = "block";
+  box.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+// セレクトボックス生成
+(function init(){
+  const y = document.getElementById("y"), m = document.getElementById("m"), d = document.getElementById("d");
+  const now = new Date().getFullYear();
+  for (let i = now; i >= 1920; i--) y.add(new Option(i + "年", i));
+  y.value = 1985;
+  for (let i = 1; i <= 12; i++) m.add(new Option(i + "月", i));
+  for (let i = 1; i <= 31; i++) d.add(new Option(i + "日", i));
+})();
+</script>
+</body>
+</html>
