@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>あなたの魂の星を調べる｜星還りの国</title>
-<meta name="description" content="生年月日から、四柱推命の十二運星にもとづく「魂の星」を調べられます。『星還りの国』シリーズ公式の計算ページです。">
+<meta name="description" content="生年月日から、四柱推命の十二運星にもとづく「魂の星」と「心の星」を調べられます。『星還りの国』シリーズ公式の計算ページです。">
 <style>
   :root{
     --ink:#3a3226; --sub:#7a7264; --washi:#f7f4ec; --line:#d8d2c4;
@@ -99,6 +99,7 @@
       <div class="r-row"><div class="r-label">生まれ日の干支</div><div class="r-val" id="rKanshi"></div></div>
       <div class="r-row"><div class="r-label">同じ星の有名人</div><div class="r-val" id="rFamous"></div></div>
       <div class="r-row"><div class="r-label">向かいの星</div><div class="r-val" id="rMirror"></div></div>
+      <div class="r-row"><div class="r-label">心の星</div><div class="r-val" id="rKokoro"></div></div>
       <div class="cta">
         <a href="#" id="linkBook">▶ この星の物語を本で読む</a>
         <a href="#" id="linkCard">▶ 特典・十二星一覧カード</a>
@@ -107,7 +108,7 @@
   </div>
 
   <footer>
-    本ページの十二運星は日柱（生まれた日の干支）にもとづきます。<br>
+    本ページの魂の星は日柱（生まれた日）、心の星は月柱（生まれた月）の十二運星にもとづきます。<br>
     『あなたは帝か、火の鳥か。』（星還りの国シリーズ）公式ページ<br>
     © 本田塾　無断転載はご遠慮ください
   </footer>
@@ -189,6 +190,50 @@ function dayPillar(y, m, d){
   return KAN[idx % 10] + SHI[idx % 12];
 }
 
+// ===== 心の星（月柱の十二運星） =====
+// 十二運早見表（対照資料00番§2と同一データ。行=日干、列=支（子〜亥）。火土同法）
+const UN12 = {
+  "甲":["沐浴","冠帯","建禄","帝旺","衰","病","死","墓","絶","胎","養","長生"],
+  "乙":["病","衰","帝旺","建禄","冠帯","沐浴","長生","養","胎","絶","墓","死"],
+  "丙":["胎","養","長生","沐浴","冠帯","建禄","帝旺","衰","病","死","墓","絶"],
+  "戊":["胎","養","長生","沐浴","冠帯","建禄","帝旺","衰","病","死","墓","絶"],
+  "丁":["絶","墓","死","病","衰","帝旺","建禄","冠帯","沐浴","長生","養","胎"],
+  "己":["絶","墓","死","病","衰","帝旺","建禄","冠帯","沐浴","長生","養","胎"],
+  "庚":["死","墓","絶","胎","養","長生","沐浴","冠帯","建禄","帝旺","衰","病"],
+  "辛":["長生","養","胎","絶","墓","死","病","衰","冠帯","建禄","帝旺","沐浴"],
+  "壬":["帝旺","衰","病","死","墓","絶","胎","養","長生","沐浴","冠帯","建禄"],
+  "癸":["建禄","冠帯","沐浴","長生","養","胎","絶","墓","死","病","衰","帝旺"],
+};
+
+// 太陽の視黄経（度）。Meeusの略算式（時刻にして±15分程度の精度。節入り判定には十分）
+function sunLongitude(jdUT){
+  const T = (jdUT - 2451545.0) / 36525;
+  const rad = Math.PI / 180;
+  const L0 = 280.46646 + 36000.76983*T + 0.0003032*T*T;
+  const M = (357.52911 + 35999.05029*T - 0.0001537*T*T) * rad;
+  const C = (1.914602 - 0.004817*T - 0.000014*T*T)*Math.sin(M)
+          + (0.019993 - 0.000101*T)*Math.sin(2*M)
+          + 0.000289*Math.sin(3*M);
+  const Om = (125.04 - 1934.136*T) * rad;
+  let lam = L0 + C - 0.00569 - 0.00478*Math.sin(Om);
+  lam %= 360; if (lam < 0) lam += 360;
+  return lam;
+}
+function jdAtJST(y, m, d, hour){
+  return Date.UTC(y, m-1, d, hour - 9) / 86400000 + 2440587.5;
+}
+// 黄経→月支番号（0=寅…11=丑。立春=黄経315度が寅月の始まり）
+function branchIdxFromLam(lam){
+  return Math.floor((((lam - 315) % 360) + 360) % 360 / 30);
+}
+// その日の月支（正午JST基準）と、節入り当日かどうか
+function monthBranch(y, m, d){
+  const idxNoon = branchIdxFromLam(sunLongitude(jdAtJST(y, m, d, 12)));
+  const idx0   = branchIdxFromLam(sunLongitude(jdAtJST(y, m, d, 0)));
+  const idx24  = branchIdxFromLam(sunLongitude(jdAtJST(y, m, d, 24)));
+  return { shi: SHI[(idxNoon + 2) % 12], boundary: idx0 !== idx24 };
+}
+
 function reveal(){
   const y = +document.getElementById("y").value;
   const m = +document.getElementById("m").value;
@@ -214,6 +259,14 @@ function reveal(){
   document.getElementById("rKanshi").textContent = gz + "（この星の生まれ日：" + STAR_GZ[starName].join("・") + "）";
   document.getElementById("rFamous").textContent = s.famous + "　ほか";
   document.getElementById("rMirror").textContent = s.mirror;
+  const mb = monthBranch(y, m, d);
+  const kStar = UN12[gz[0]][SHI.indexOf(mb.shi)];
+  const ks = STARS[kStar];
+  let kokoro = kStar + "（" + ks.name + "）――世の中と関わるときの、もうひとつのあなた";
+  kokoro += "<br><small style=\"color:var(--sub);font-size:11px;\">※心の星は月柱（生まれた月）の十二運星です。くわしくは続巻・相性と人間関係編で。";
+  if (mb.boundary) kokoro += "<br>※この日は月の変わり目（節入り）当日のため、生まれた時刻によっては心の星が変わることがあります。";
+  kokoro += "</small>";
+  document.getElementById("rKokoro").innerHTML = kokoro;
   box.style.display = "block";
   box.scrollIntoView({behavior:"smooth", block:"start"});
 }
