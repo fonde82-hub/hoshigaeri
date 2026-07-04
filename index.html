@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>あなたの魂の星を調べる｜星還りの国</title>
-<meta name="description" content="生年月日から、四柱推命の十二運星にもとづく「魂の星」と「心の星」を調べられます。『星還りの国』シリーズ公式の計算ページです。">
+<meta name="description" content="生年月日から、四柱推命の十二運星にもとづく「魂の星」「心の星」「根の星」「実の星」を調べられます。『星還りの国』シリーズ公式の計算ページです。">
 <style>
   :root{
     --ink:#3a3226; --sub:#7a7264; --washi:#f7f4ec; --line:#d8d2c4;
@@ -81,9 +81,10 @@
       <select id="y" aria-label="年"></select>
       <select id="m" aria-label="月"></select>
       <select id="d" aria-label="日"></select>
+      <select id="h" aria-label="時刻（任意）"></select>
     </div>
     <button class="btn" onclick="reveal()">星 を 調 べ る</button>
-    <p class="note">※生まれた時刻・場所は不要です（魂の星は「日」で決まります）。<br>※深夜0時前後のお生まれの方は、前日の日付でも調べて、しっくりくる方をご覧ください。</p>
+    <p class="note">※時刻は、わかる方だけで結構です（実の星の表示に使います）。魂・心・根の星は日付だけでわかります。<br>※深夜0時前後のお生まれの方は、前日の日付でも調べて、しっくりくる方をご覧ください。</p>
   </div>
 
   <div id="result">
@@ -100,6 +101,8 @@
       <div class="r-row"><div class="r-label">同じ星の有名人</div><div class="r-val" id="rFamous"></div></div>
       <div class="r-row"><div class="r-label">向かいの星</div><div class="r-val" id="rMirror"></div></div>
       <div class="r-row"><div class="r-label">心の星</div><div class="r-val" id="rKokoro"></div></div>
+      <div class="r-row"><div class="r-label">根の星</div><div class="r-val" id="rNe"></div></div>
+      <div class="r-row"><div class="r-label">実の星</div><div class="r-val" id="rMi"></div></div>
       <div class="cta">
         <a href="#" id="linkBook">▶ この星の物語を本で読む</a>
         <a href="#" id="linkCard">▶ 特典・十二星一覧カード</a>
@@ -108,7 +111,7 @@
   </div>
 
   <footer>
-    本ページの魂の星は日柱（生まれた日）、心の星は月柱（生まれた月）の十二運星にもとづきます。<br>
+    本ページの星は、魂=日柱・心=月柱・根=年柱・実=時柱の十二運星にもとづきます。<br>
     『あなたは帝か、火の鳥か。』（星還りの国シリーズ）公式ページ<br>
     © 本田塾　無断転載はご遠慮ください
   </footer>
@@ -231,8 +234,16 @@ function monthBranch(y, m, d){
   const idxNoon = branchIdxFromLam(sunLongitude(jdAtJST(y, m, d, 12)));
   const idx0   = branchIdxFromLam(sunLongitude(jdAtJST(y, m, d, 0)));
   const idx24  = branchIdxFromLam(sunLongitude(jdAtJST(y, m, d, 24)));
-  return { shi: SHI[(idxNoon + 2) % 12], boundary: idx0 !== idx24 };
+  return { shi: SHI[(idxNoon + 2) % 12], boundary: idx0 !== idx24,
+           idxNoon: idxNoon, idx0: idx0, idx24: idx24 };
 }
+// 年支（立春切り）: 1〜2月で月支がまだ子・丑のうちは前年扱い
+function yearBranch(y, m, mb){
+  const adjY = (m < 3 && mb.idxNoon >= 10) ? y - 1 : y;
+  return { shi: SHI[((adjY - 4) % 12 + 12) % 12], rissyun: (mb.idx0 === 11 && mb.idx24 === 0) };
+}
+// 時支: 23時起点の2時間刻み
+function hourBranch(h){ return SHI[Math.floor(((h + 1) % 24) / 2)]; }
 
 function reveal(){
   const y = +document.getElementById("y").value;
@@ -267,6 +278,25 @@ function reveal(){
   if (mb.boundary) kokoro += "<br>※この日は月の変わり目（節入り）当日のため、生まれた時刻によっては心の星が変わることがあります。";
   kokoro += "</small>";
   document.getElementById("rKokoro").innerHTML = kokoro;
+  const yb = yearBranch(y, m, mb);
+  const neStar = UN12[gz[0]][SHI.indexOf(yb.shi)];
+  let ne = neStar + "（" + STARS[neStar].name + "）――受け継いだ土台と、幼いころのあなた";
+  ne += "<br><small style=\"color:var(--sub);font-size:11px;\">※根の星は年柱（生まれた年）の十二運星です。1月〜立春生まれの方は、前年の支で自動計算しています。";
+  if (yb.rissyun) ne += "<br>※この日は立春当日のため、生まれた時刻によっては根の星が変わることがあります。";
+  ne += "</small>";
+  document.getElementById("rNe").innerHTML = ne;
+  const hv = document.getElementById("h").value;
+  if (hv === "") {
+    document.getElementById("rMi").innerHTML = "<small style=\"color:var(--sub);font-size:11px;\">生まれた時刻を選ぶと表示されます（時柱にもとづく、晩年の季節の星です）。</small>";
+  } else {
+    const hb = hourBranch(+hv);
+    const miStar = UN12[gz[0]][SHI.indexOf(hb)];
+    let mi = miStar + "（" + STARS[miStar].name + "）――晩年の季節と、この世に残すもの";
+    mi += "<br><small style=\"color:var(--sub);font-size:11px;\">※実の星は時柱（生まれた時刻）の十二運星です。";
+    if (+hv === 23) mi += "<br>※23時台のお生まれは、暦のうえで日付の扱いが変わる場合があります。";
+    mi += "</small>";
+    document.getElementById("rMi").innerHTML = mi;
+  }
   box.style.display = "block";
   box.scrollIntoView({behavior:"smooth", block:"start"});
 }
@@ -279,6 +309,9 @@ function reveal(){
   y.value = 1985;
   for (let i = 1; i <= 12; i++) m.add(new Option(i + "月", i));
   for (let i = 1; i <= 31; i++) d.add(new Option(i + "日", i));
+  const h = document.getElementById("h");
+  h.add(new Option("時刻不明", ""));
+  for (let i = 0; i <= 23; i++) h.add(new Option(i + "時台", i));
 })();
 </script>
 </body>
